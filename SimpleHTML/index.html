@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="./lib/signalr/signalr.js"></script>
+    <script src="./lib/jquery.min.js"></script>
+</head>
+
+<body>
+    <h1>Chat Hub</h1>
+    <button id="btn-connect">Connect</button>
+    <button id="btn-disconnect">Disconnect</button>
+
+    <br/>
+    <br/>
+
+    <input type="text" id="txt-sender" placeholder="sender" />
+    <input type="text" id="txt-message" placeholder="message" />
+    <button id="btn-send">Send</button>
+    <button id="btn-rest-send">REST API Send</button>
+
+    <p>
+        <span id="status">Not Connected!</span>
+    </p>
+
+    <ul id="messagesList">
+
+    </ul>
+
+    <script>
+
+        (async function () {
+
+            var sender = document.getElementById("txt-sender");
+            var message = document.getElementById("txt-message");
+            var sendBtn = document.getElementById("btn-send");
+            var apiSendBtn = document.getElementById("btn-rest-send");
+            var status = document.getElementById("status");
+
+            var connectBtn = document.getElementById("btn-connect");
+            var disconnectBtn = document.getElementById("btn-disconnect");
+
+            var connection = new signalR.HubConnectionBuilder()
+                .withUrl("https://localhost:44365/hubs/chat")
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+    
+            connectBtn.addEventListener("click", function () {
+                connection.start()
+                    .then(function () {
+                        status.innerHTML = "Connected!"
+                    })
+                    .catch((e) => {
+                        console.error(e.toString());
+                    });
+            });
+
+            disconnectBtn.addEventListener("click", function () {
+                connection.stop()
+                    .then(function () {
+                        status.innerHTML = "Disconnected!";
+                    })
+                    .catch((e) => {
+                        console.error(e.toString());
+                    });
+            });
+
+            connection.on("RecieveMessage", function (sender, message) {
+                const encodedMsg = sender + " says " + message;
+                const li = document.createElement("li");
+                li.textContent = encodedMsg;
+                document.getElementById("messagesList").appendChild(li);
+            });
+
+            connection.on("MessageSent", function() {
+                alert('Your message has been sent!');
+            });
+
+            sendBtn.addEventListener("click", function () {
+
+                connection.invoke("SendMessage", sender.value, message.value)
+                    .catch((e) => {
+                        console.error(e.toString());
+                    });
+
+            });
+
+            apiSendBtn.addEventListener("click", function () {
+                fetch("https://localhost:44365/api/sample", {
+                    method: "POST",
+                    body: JSON.stringify({ sender: sender.value, message: message.value}),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+            });
+
+        })();
+
+
+    </script>
+</body>
+
+</html>

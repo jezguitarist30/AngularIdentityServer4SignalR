@@ -1,0 +1,15 @@
+<h1>List of Channel</h1>
+
+<div class="row">
+  <div class="col-sm-3" *ngFor="let channel of channels | async">
+
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title">{{channel.name}}</h5>       
+        <p class="card-text">{{channel.description}}</p>
+        <a [routerLink]="['/channel/drawing', channel.id]" class="btn btn-primary">Join</a>
+      </div>
+    </div>
+
+  </div>
+</div>
